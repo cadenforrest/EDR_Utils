@@ -16,5 +16,12 @@
     {
       "path": "./tmp/file1.txt"
     }
+  ],
+  "network_connections": [
+    {
+      "host": "cadens-mbp.lan",
+      "port": 9999,
+      "data": "hello world"
+    }
   ]
 }

@@ -1,4 +1,6 @@
 from re import T
+import socket
+import sys
 import psutil
 import os
 import json
@@ -24,6 +26,33 @@ class Logger:
         self.logger.info(message)
 
 
+def send_data_to_server(network_io_config: dict):
+    # create a socket object
+    p = psutil.Process()
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
+    # get local machine name
+    host = network_io_config["host"]
+    port = 9999
+    # connection to hostname on the port.
+    s.connect((host, port))                               
+    # Receive no more than 1024 bytes
+    with p.oneshot():
+        log_dict = {}
+        log_dict['activity_descriptor'] = 'network_io'  
+        log_dict["timestamp"] = datetime.datetime.fromtimestamp(
+            p.create_time()
+        ).strftime("%Y-%m-%d %H:%M:%S")
+        log_dict["username"] = p.username()
+        log_dict["process_name"] = p.name()
+        log_dict["command_line"] = p.cmdline()
+        log_dict["process_id"] = p.pid
+        log_dict["open_files"] = p.open_files()
+        log_dict["connections"] = p.connections()
+        log_dict["protocol"] = 'tcp'
+    s.send(network_io_config["data"].encode('ascii'))                                     
+    s.close()
+    print(f"sent {network_io_config['data']} to {host}")
+    logger.log(json.dumps(log_dict))
 
 def delete_file(file_config: dict):
     p = psutil.Process()
@@ -116,6 +145,7 @@ if __name__ == "__main__":
         create_or_modify_file(file_config)
     for file_config in config["files_to_delete"]:
         delete_file(file_config)
-
+    for network_io_config in config["network_connections"]:
+        send_data_to_server(network_io_config)
     print("Finished")
     print("Wrote log to log.{}.txt".format(start_time.strftime("%Y-%m-%d %H:%M:%S")))
