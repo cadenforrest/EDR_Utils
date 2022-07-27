@@ -1,0 +1,20 @@
+{ 
+  "processes": [
+    {
+      "name": "process1", 
+      "command": "sleep 500",
+      "timeout": 2 
+    }
+  ],
+  "files_to_create_or_modify": [
+    {
+      "path": "./tmp/file1.txt",
+      "content": "hello world"
+    }
+  ],
+  "files_to_delete": [
+    {
+      "path": "./tmp/file1.txt"
+    }
+  ]
+}
