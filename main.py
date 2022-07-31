@@ -1,6 +1,5 @@
 from re import T
 import socket
-import sys
 import psutil
 import os
 import json
@@ -29,16 +28,13 @@ class Logger:
 def send_data_to_server(network_io_config: dict):
     # create a socket object
     p = psutil.Process()
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
-    # get local machine name
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     host = network_io_config["host"]
     port = 9999
-    # connection to hostname on the port.
-    s.connect((host, port))                               
-    # Receive no more than 1024 bytes
+    s.connect((host, port))
     with p.oneshot():
         log_dict = {}
-        log_dict['activity_descriptor'] = 'network_io'  
+        log_dict["activity_descriptor"] = "network_io"
         log_dict["timestamp"] = datetime.datetime.fromtimestamp(
             p.create_time()
         ).strftime("%Y-%m-%d %H:%M:%S")
@@ -48,22 +44,23 @@ def send_data_to_server(network_io_config: dict):
         log_dict["process_id"] = p.pid
         log_dict["open_files"] = p.open_files()
         log_dict["connections"] = p.connections()
-        log_dict["protocol"] = 'tcp'
-    s.send(network_io_config["data"].encode('ascii'))                                     
+        log_dict["protocol"] = "tcp"
+    s.send(network_io_config["data"].encode("ascii"))
     s.close()
     print(f"sent {network_io_config['data']} to {host}")
     logger.log(json.dumps(log_dict))
 
+
 def delete_file(file_config: dict):
     p = psutil.Process()
-    try: 
-      f = open(file_config["path"])
+    try:
+        f = open(file_config["path"])
     except FileNotFoundError:
-      print("File not found at {}".format(file_config["path"]))
-      return
-    with p.oneshot(): 
+        print("File not found at {}".format(file_config["path"]))
+        return
+    with p.oneshot():
         log_dict = {}
-        log_dict['activity_descriptor'] = 'delete'  
+        log_dict["activity_descriptor"] = "delete"
         log_dict["timestamp"] = datetime.datetime.fromtimestamp(
             p.create_time()
         ).strftime("%Y-%m-%d %H:%M:%S")
@@ -79,16 +76,16 @@ def delete_file(file_config: dict):
 
 def create_or_modify_file(file_config: dict):
     p = psutil.Process()
-    try: 
-      f = open(file_config["path"], "w")
-    except FileNotFoundError: 
-      os.makedirs(os.path.dirname(file_config["path"]))
-      f = open(file_config["path"], "w")
-      print(f.fileno())
-    # use psutil's process context manager to avoid race condition shenanigans
+    try:
+        f = open(file_config["path"], "w")
+    except FileNotFoundError:
+        os.makedirs(os.path.dirname(file_config["path"]))
+        f = open(file_config["path"], "w")
+        print(f.fileno())
+    # use psutil's process context manager to avoid race condition shenanigans when grabbing the data we're interested in
     with p.oneshot():
         log_dict = {}
-        log_dict['activity_descriptor'] = 'create_or_modify'  
+        log_dict["activity_descriptor"] = "create_or_modify"
         log_dict["timestamp"] = datetime.datetime.fromtimestamp(
             p.create_time()
         ).strftime("%Y-%m-%d %H:%M:%S")
@@ -108,10 +105,10 @@ def run_process(process: dict):
     args = shlex.split(process["command"])
     # start the process
     p = psutil.Popen(args, stdout=PIPE, stderr=PIPE)
-    # use psutil's process context manager to avoid race condition shenanigans
+    # use psutil's process context manager to avoid race condition shenanigans when grabbing the data we're interested in
     with p.oneshot():
         log_dict = {}
-        log_dict['activity_descriptor'] = 'executable'
+        log_dict["activity_descriptor"] = "executable"
         log_dict["timestamp"] = datetime.datetime.fromtimestamp(
             p.create_time()
         ).strftime("%Y-%m-%d %H:%M:%S")
