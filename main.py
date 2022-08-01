@@ -27,28 +27,31 @@ class Logger:
 
 def send_data_to_server(network_io_config: dict):
     # create a socket object
-    p = psutil.Process()
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    host = network_io_config["host"]
-    port = 9999
-    s.connect((host, port))
-    with p.oneshot():
-        log_dict = {}
-        log_dict["timestamp"] = datetime.datetime.fromtimestamp(
-            p.create_time()
-        ).strftime("%Y-%m-%d %H:%M:%S")
-        log_dict["username"] = p.username()
-        log_dict["process_name"] = p.name()
-        log_dict["command_line"] = p.cmdline()
-        log_dict["process_id"] = p.pid
-        log_dict["open_files"] = p.open_files()
-        log_dict["connections"] = p.connections()
-        log_dict["protocol"] = "tcp"
-        log_dict["size_of_data_sent"] = network_io_config["data"].__sizeof__()
-    s.send(network_io_config["data"].encode("ascii"))
-    s.close()
-    print(f"sent {network_io_config['data']} to {host}")
-    logger.log("network io", log_dict)
+    try: 
+      p = psutil.Process()
+      s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+      host = network_io_config["host"]
+      port = network_io_config["port"] 
+      s.connect((host, port))
+      with p.oneshot():
+          log_dict = {}
+          log_dict["timestamp"] = datetime.datetime.fromtimestamp(
+              p.create_time()
+          ).strftime("%Y-%m-%d %H:%M:%S")
+          log_dict["username"] = p.username()
+          log_dict["process_name"] = p.name()
+          log_dict["command_line"] = p.cmdline()
+          log_dict["process_id"] = p.pid
+          log_dict["open_files"] = p.open_files()
+          log_dict["connections"] = p.connections()
+          log_dict["protocol"] = "tcp"
+          log_dict["size_of_data_sent"] = network_io_config["data"].__sizeof__()
+      s.send(network_io_config["data"].encode("ascii"))
+      s.close()
+      print(f"sent {network_io_config['data']} to {host}")
+      logger.log("network io", log_dict)
+    except: 
+      print("Unable to connect to {}:{}".format(host, port))
 
 
 def delete_file(file_config: dict):

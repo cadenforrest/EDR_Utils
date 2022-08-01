@@ -6,6 +6,16 @@ This is a simple python script capable of performing the following tasks:
 - File creation, modification, deletion
 - Network connection + data transmission
 
+Upon executing any of the tasks, the script will log the following information in machine-readable format to a timestamped log file:
+
+- Task name
+- Timestamp 
+- Username
+- Process (executable) name
+- Command line
+- Process ID
+- Files opened
+- Connections opened
 
 ## Process execution
 
@@ -136,7 +146,7 @@ cd EDR_Utils
 python3 simpleserver.py
 ```
 
-Note that you will need to edit the `config.json` file to point to the correct host and port.
+Note that you will need to edit the `config.json` file to point to the correct host and port, depending on your system.
 
 Then, you can run the script: 
 
