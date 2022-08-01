@@ -48,7 +48,7 @@ def send_data_to_server(network_io_config: dict):
     s.send(network_io_config["data"].encode("ascii"))
     s.close()
     print(f"sent {network_io_config['data']} to {host}")
-    logger.log('network io', log_dict)
+    logger.log("network io", log_dict)
 
 
 def delete_file(file_config: dict):
@@ -70,7 +70,7 @@ def delete_file(file_config: dict):
         log_dict["open_files"] = p.open_files()
         log_dict["connections"] = p.connections()
     os.remove(f.name)
-    logger.log('delete file', log_dict)
+    logger.log("delete file", log_dict)
 
 
 def create_or_modify_file(file_config: dict):
@@ -93,7 +93,7 @@ def create_or_modify_file(file_config: dict):
         log_dict["process_id"] = p.pid
         log_dict["open_files"] = p.open_files()
         log_dict["connections"] = p.connections()
-    logger.log('create or modify file', log_dict)
+    logger.log("create or modify file", log_dict)
     f.write(file_config["content"])
     f.close()
 
@@ -115,13 +115,14 @@ def run_process(process: dict):
         log_dict["process_id"] = p.pid
         log_dict["open_files"] = p.open_files()
         log_dict["connections"] = p.connections()
-    logger.log('process execution', log_dict)
+    logger.log("process execution", log_dict)
     try:
         p.wait(timeout=process["timeout"])
     except psutil.TimeoutExpired:
         print("Process timed out after {} seconds".format(process["timeout"]))
         p.kill()
         print("Process killed")
+
 
 # init logger
 start_time = datetime.datetime.now()
