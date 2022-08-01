@@ -21,8 +21,8 @@ class Logger:
         handler.setFormatter(formatter)
         self.logger.addHandler(handler)
 
-    def log(self, message: str):
-        self.logger.info(message)
+    def log(self, message: str, extras: dict = None):
+        self.logger.info(message, extra=extras)
 
 
 def send_data_to_server(network_io_config: dict):
@@ -34,7 +34,6 @@ def send_data_to_server(network_io_config: dict):
     s.connect((host, port))
     with p.oneshot():
         log_dict = {}
-        log_dict["activity_descriptor"] = "network_io"
         log_dict["timestamp"] = datetime.datetime.fromtimestamp(
             p.create_time()
         ).strftime("%Y-%m-%d %H:%M:%S")
@@ -45,10 +44,11 @@ def send_data_to_server(network_io_config: dict):
         log_dict["open_files"] = p.open_files()
         log_dict["connections"] = p.connections()
         log_dict["protocol"] = "tcp"
+        log_dict["size_of_data_sent"] = network_io_config["data"].__sizeof__()
     s.send(network_io_config["data"].encode("ascii"))
     s.close()
     print(f"sent {network_io_config['data']} to {host}")
-    logger.log(json.dumps(log_dict))
+    logger.log('network io', log_dict)
 
 
 def delete_file(file_config: dict):
@@ -60,7 +60,6 @@ def delete_file(file_config: dict):
         return
     with p.oneshot():
         log_dict = {}
-        log_dict["activity_descriptor"] = "delete"
         log_dict["timestamp"] = datetime.datetime.fromtimestamp(
             p.create_time()
         ).strftime("%Y-%m-%d %H:%M:%S")
@@ -71,7 +70,7 @@ def delete_file(file_config: dict):
         log_dict["open_files"] = p.open_files()
         log_dict["connections"] = p.connections()
     os.remove(f.name)
-    logger.log(json.dumps(log_dict))
+    logger.log('delete file', log_dict)
 
 
 def create_or_modify_file(file_config: dict):
@@ -85,7 +84,6 @@ def create_or_modify_file(file_config: dict):
     # use psutil's process context manager to avoid race condition shenanigans when grabbing the data we're interested in
     with p.oneshot():
         log_dict = {}
-        log_dict["activity_descriptor"] = "create_or_modify"
         log_dict["timestamp"] = datetime.datetime.fromtimestamp(
             p.create_time()
         ).strftime("%Y-%m-%d %H:%M:%S")
@@ -95,7 +93,7 @@ def create_or_modify_file(file_config: dict):
         log_dict["process_id"] = p.pid
         log_dict["open_files"] = p.open_files()
         log_dict["connections"] = p.connections()
-    logger.log(json.dumps(log_dict))
+    logger.log('create or modify file', log_dict)
     f.write(file_config["content"])
     f.close()
 
@@ -108,7 +106,6 @@ def run_process(process: dict):
     # use psutil's process context manager to avoid race condition shenanigans when grabbing the data we're interested in
     with p.oneshot():
         log_dict = {}
-        log_dict["activity_descriptor"] = "executable"
         log_dict["timestamp"] = datetime.datetime.fromtimestamp(
             p.create_time()
         ).strftime("%Y-%m-%d %H:%M:%S")
@@ -118,15 +115,13 @@ def run_process(process: dict):
         log_dict["process_id"] = p.pid
         log_dict["open_files"] = p.open_files()
         log_dict["connections"] = p.connections()
-    logger.log(json.dumps(log_dict))
+    logger.log('process execution', log_dict)
     try:
         p.wait(timeout=process["timeout"])
     except psutil.TimeoutExpired:
         print("Process timed out after {} seconds".format(process["timeout"]))
         p.kill()
         print("Process killed")
-        log_dict["process_status"] = "Killed"
-
 
 # init logger
 start_time = datetime.datetime.now()
